@@ -39,8 +39,7 @@ This is a simple PHP-based public API to retrieve a user's IP address in various
 | JSON | `https://example.com/?format=json` | `{ "ip": "123.45.67.89" }` |
 | JSONP | `https://example.com/?format=jsonp&callback=myFunction` | `myFunction({ "ip": "123.45.67.89" });` |
 | XML | `https://example.com/?format=xml` | `<?xml version="1.0" encoding="UTF-8"?><response><ip>123.45.67.89</ip></response>` |
-| CSV | `https://example.com/?format=csv` | `ip
-123.45.67.89` |
+| CSV | `https://example.com/?format=csv` | `ip,123.45.67.89` |
 | HTML | `https://example.com/?format=html` | `<html><body><p>Your IP Address: 123.45.67.89</p></body></html>` |
 
 ## Code Examples

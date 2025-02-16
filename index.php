@@ -15,7 +15,18 @@ function getUserIP() {
 // Function to get geo-location data based on IP
 function getGeoLocation($ip) {
     $api_url = "http://ip-api.com/json/{$ip}?fields=status,message,country,regionName,city,lat,lon,isp";
-    $response = @file_get_contents($api_url);
+    
+    if (function_exists('file_get_contents')) {
+        $response = @file_get_contents($api_url);
+    } else {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $api_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        $response = curl_exec($ch);
+        curl_close($ch);
+    }
+    
     return $response ? json_decode($response, true) : null;
 }
 

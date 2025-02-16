@@ -12,10 +12,44 @@ function getUserIP() {
     }
 }
 
+// Function to get geo-location data based on IP
+function getGeoLocation($ip) {
+    $api_url = "http://ip-api.com/json/{$ip}?fields=status,message,country,regionName,city,lat,lon,isp";
+    $response = @file_get_contents($api_url);
+    return $response ? json_decode($response, true) : null;
+}
+
 // Get format parameter from the URL
 $format = isset($_GET['format']) ? strtolower($_GET['format']) : 'text';
 $callback = isset($_GET['callback']) ? $_GET['callback'] : null;
 $user_ip = getUserIP();
+
+// Fetch geo-location data
+$geoData = getGeoLocation($user_ip);
+
+// Function to get IP and geolocation in text format
+function getUserGeoText($geoData) {
+    return "IP Address: " . getUserIP() . "\n" .
+           "Country: " . ($geoData['country'] ?? 'N/A') . "\n" .
+           "Region: " . ($geoData['regionName'] ?? 'N/A') . "\n" .
+           "City: " . ($geoData['city'] ?? 'N/A') . "\n" .
+           "Latitude: " . ($geoData['lat'] ?? 'N/A') . "\n" .
+           "Longitude: " . ($geoData['lon'] ?? 'N/A') . "\n" .
+           "ISP: " . ($geoData['isp'] ?? 'N/A');
+}
+
+// Function to get IP and geolocation in JSON format
+function getUserGeoJson($geoData) {
+    return json_encode([
+        "ip" => getUserIP(),
+        "country" => $geoData['country'] ?? 'N/A',
+        "region" => $geoData['regionName'] ?? 'N/A',
+        "city" => $geoData['city'] ?? 'N/A',
+        "latitude" => $geoData['lat'] ?? 'N/A',
+        "longitude" => $geoData['lon'] ?? 'N/A',
+        "isp" => $geoData['isp'] ?? 'N/A'
+    ]);
+}
 
 // Set headers based on format
 switch ($format) {
@@ -47,6 +81,16 @@ switch ($format) {
     case 'html':
         header('Content-Type: text/html; charset=UTF-8');
         echo "<html><head><title>Your IP Address</title></head><body><p>Your IP Address: $user_ip</p></body></html>";
+        break;
+
+    case 'full':
+        header('Content-Type: text/plain');
+        echo getUserGeoText($geoData);
+        break;
+
+    case 'full-json':
+        header('Content-Type: application/json');
+        echo getUserGeoJson($geoData);
         break;
 
     default:

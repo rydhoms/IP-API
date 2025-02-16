@@ -2,6 +2,12 @@
 
 This is a simple PHP-based public API to retrieve a user's IP address in various formats. The API supports JSON, JSONP, XML, CSV, HTML, and plain text responses.
 
+## Requirements
+- PHP 7.4 or later
+- Web server (Apache, Nginx, or similar)
+- Internet access for fetching geolocation data (`full` and `full-json` formats)
+- Optional: cURL enabled (for additional integrations)
+
 ## Features
 - Supports multiple response formats: `json`, `jsonp`, `xml`, `csv`, `html`, `text`, `full`, and `full-json`.
 - **Format `full` and `full-json` include geolocation data obtained from the free IP geolocation service [ip-api.com](https://ip-api.com/).**
@@ -44,7 +50,7 @@ This is a simple PHP-based public API to retrieve a user's IP address in various
 | CSV | `https://example.com/?format=csv` | `ip,123.45.67.89` |
 | HTML | `https://example.com/?format=html` | `<html><body><p>Your IP Address: 123.45.67.89</p></body></html>` |
 | Full (IP + Geolocation) | `https://example.com/?format=full` | ``` IP Address: 123.45.67.89 Country: Indonesia Region: Jawa Tengah City: Solo Latitude: -7.5666 Longitude: 110.8167 ISP: Telkom Indonesia ``` |
-| Full JSON (IP + Geolocation) | `https://example.com/?format=full-json` | ``` { "ip": "123.45.67.89", "country": "Indonesia", "region": "Jawa Tengah", "city": "Solo", "latitude": -7.5666, "longitude": 110.8167, "isp": "Telkom Indonesia" } ``` |
+| Full JSON | `https://example.com/?format=full-json` | ```json { "ip": "123.45.67.89", "country": "Indonesia", "region": "Jawa Tengah", "city": "Solo", "latitude": -7.5666, "longitude": 110.8167, "isp": "Telkom Indonesia" } ``` |
 
 🔹 **Note:**  
 - **The `full` and `full-json` formats use geolocation data from [ip-api.com](https://ip-api.com/), a free IP geolocation service.**  

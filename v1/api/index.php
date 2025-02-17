@@ -195,9 +195,9 @@ function detectProxyVPN($ip) {
     require_once __DIR__ . '/../../config.php';
 
     // Retrieve the API key
-    $apiKey = $config['IPHUB_API_KEY'];
+    $iphubApiKey = $config['IPHUB_API_KEY'];
 
-    if (!$apiKey) {
+    if (!$iphubApiKey) {
         throw new Exception("IPHub API key not found.");
     }
 
@@ -205,7 +205,7 @@ function detectProxyVPN($ip) {
 
     try {
         $response = fetchUrl($apiUrl, [
-            'X-Key: ' . $apiKey
+            'X-Key: ' . $iphubApiKey
         ]);
 
         $data = json_decode($response, true);
@@ -241,11 +241,17 @@ function getGeoLocation($ip) {
         return json_decode(file_get_contents($cacheFile), true);
     }
 
+    // Include config.php from the root directory
+    require_once __DIR__ . '/../../config.php';
+
+    // Retrieve the API key
+    $ipinfoApiKey = $config['IPINFO_API_KEY'];
+
     // List of APIs (primary and fallback)
     $apiList = [
         "http://ip-api.com/json/{$ip}?fields=status,message,country,regionName,city,lat,lon,isp",
         "https://ipwhois.app/json/{$ip}",
-        "https://ipinfo.io/{$ip}/json?token=" . getenv('IPINFO_API_KEY') // Use environment variable
+        "https://ipinfo.io/{$ip}/json?token=" . $ipinfoApiKey // Use the API key from config.php
     ];
 
     foreach ($apiList as $api_url) {

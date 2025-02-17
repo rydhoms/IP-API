@@ -16,29 +16,11 @@ This is a simple PHP-based public API to retrieve a user's IP address in various
 - Simple and lightweight implementation.
 
 ## Installation
-1. Upload the `index.php` file to your web server's root directory.
-2. If using Apache, ensure that `.htaccess` is configured correctly:
-   ```apache
-   RewriteEngine On
-   RewriteRule ^$ index.php [L]
-   ```
-3. If using Nginx, modify the server block as follows:
-   ```nginx
-   server {
-       listen 80;
-       server_name example.com;
-       root /var/www/html;
-       index index.php;
-       location / { try_files $uri /index.php; }
-       location ~ \.php$ {
-           include snippets/fastcgi-php.conf;
-           fastcgi_pass unix:/run/php/php-fpm.sock;
-           fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-           include fastcgi_params;
-       }
-   }
-   ```
-4. Restart your server to apply changes.
+1. Download source
+2. Upload the all files to to your web server's root directory
+3. Edit `config.php` and replace the key from IPHub service to get VPN/Proxy detection, and the key from IPInfo service for backup IP geolocation detection.
+4. Access your website via domain root like `https://example.com` and access api via `https://example.com/?format=json` or  `https://example.com/v1/api?format=json`
+
 
 ## Usage
 | Format  | URL Example | Response |
@@ -100,6 +82,16 @@ https.get('https://example.com/?format=json', (res) => {
     res.on('end', () => { console.log(JSON.parse(data).ip); });
 });
 ```
+
+## Demo Website
+Usage examples can be accessed at [https://ip.ridho.id](https://ip.ridho.id) to display the front-end page for IP checking and VPN/Proxy detection.
+
+You can also use the API with various formats:
+- **JSON Format**: [https://ip.ridho.id/?format=json](https://ip.ridho.id/?format=json)
+- **Full Format**: [https://ip.ridho.id/?format=full](https://ip.ridho.id/?format=full)
+- **Full JSON Format**: [https://ip.ridho.id/?format=full-json](https://ip.ridho.id/?format=full-json)
+
+Other formats are also available as needed.
 
 ## License
 This project is open-source and free to use under the MIT License.

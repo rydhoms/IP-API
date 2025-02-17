@@ -1,5 +1,4 @@
 ![License](https://img.shields.io/github/license/rydhoms/ip-api)
-[![PHP Composer](https://github.com/rydhoms/ip-api/actions/workflows/php.yml/badge.svg)](https://github.com/rydhoms/ip-api/actions/workflows/php.yml)
 ![Demo Live](https://badgen.net/badge/Demo/Website/green?icon=firefox)
 
 # Public IP API

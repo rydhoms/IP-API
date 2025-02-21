@@ -1,120 +1,112 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
+// index.php or api.php to respond api request
+// Function to get the user's IP address
+function getUserIP() {
+    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        return filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP);
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        $ip = trim($ipList[0]); // Get the first IP (front-most)
+        return filter_var($ip, FILTER_VALIDATE_IP);
+    } else {
+        return filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP);
+    }
+}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP Geolocation & Proxy/VPN Detection</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+// Function to get geo-location data based on IP
+function getGeoLocation($ip) {
+    $api_url = "http://ip-api.com/json/{$ip}?fields=status,message,country,regionName,city,lat,lon,isp";
+    
+    if (function_exists('file_get_contents')) {
+        $response = @file_get_contents($api_url);
+    } else {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $api_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        $response = curl_exec($ch);
+        curl_close($ch);
+    }
+    
+    return $response ? json_decode($response, true) : null;
+}
+
+// Get format parameter from the URL
+$format = isset($_GET['format']) ? strtolower($_GET['format']) : 'text';
+$callback = isset($_GET['callback']) ? $_GET['callback'] : null;
+$user_ip = getUserIP();
+
+// Fetch geo-location data
+$geoData = getGeoLocation($user_ip);
+
+// Function to get IP and geolocation in text format
+function getUserGeoText($geoData) {
+    return "IP Address: " . getUserIP() . "\n" .
+           "Country: " . ($geoData['country'] ?? 'N/A') . "\n" .
+           "Region: " . ($geoData['regionName'] ?? 'N/A') . "\n" .
+           "City: " . ($geoData['city'] ?? 'N/A') . "\n" .
+           "Latitude: " . ($geoData['lat'] ?? 'N/A') . "\n" .
+           "Longitude: " . ($geoData['lon'] ?? 'N/A') . "\n" .
+           "ISP: " . ($geoData['isp'] ?? 'N/A');
+}
+
+// Function to get IP and geolocation in JSON format
+function getUserGeoJson($geoData) {
+    return json_encode([
+        "ip" => getUserIP(),
+        "country" => $geoData['country'] ?? 'N/A',
+        "region" => $geoData['regionName'] ?? 'N/A',
+        "city" => $geoData['city'] ?? 'N/A',
+        "latitude" => $geoData['lat'] ?? 'N/A',
+        "longitude" => $geoData['lon'] ?? 'N/A',
+        "isp" => $geoData['isp'] ?? 'N/A'
+    ]);
+}
+
+// Set headers based on format
+switch ($format) {
+    case 'json':
+        header('Content-Type: application/json');
+        echo json_encode(["ip" => $user_ip]);
+        break;
+    
+    case 'jsonp':
+        if (!empty($callback) && preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $callback)) {
+            header('Content-Type: application/javascript');
+            echo $callback . '(' . json_encode(["ip" => $user_ip]) . ');';
+        } else {
+            echo "Invalid or missing callback parameter for JSONP";
         }
+        break;
+    
+    case 'xml':
+        header('Content-Type: application/xml');
+        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+        echo "<response><ip>$user_ip</ip></response>";
+        break;
 
-        .container {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-        }
+    case 'csv':
+        header('Content-Type: text/csv');
+        echo "ip\n$user_ip";
+        break;
 
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            color: #2c3e50;
-        }
+    case 'html':
+        header('Content-Type: text/html; charset=UTF-8');
+        echo "<html><head><title>Your IP Address</title></head><body><p>Your IP Address: $user_ip</p></body></html>";
+        break;
 
-        .data-item {
-            margin: 1rem 0;
-            font-size: 1.1rem;
-        }
+    case 'full':
+        header('Content-Type: text/plain');
+        echo getUserGeoText($geoData);
+        break;
 
-        .data-item strong {
-            color: #2980b9;
-        }
+    case 'full-json':
+        header('Content-Type: application/json');
+        echo getUserGeoJson($geoData);
+        break;
 
-        .loading {
-            font-size: 1.2rem;
-            color: #7f8c8d;
-        }
-
-        .error {
-            color: #e74c3c;
-            font-size: 1.2rem;
-        }
-
-        .refresh-button {
-            margin-top: 1.5rem;
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            color: #fff;
-            background-color: #3498db;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .refresh-button:hover {
-            background-color: #2980b9;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="container">
-        <h1>IP Geolocation & Proxy/VPN Detection</h1>
-        <div id="data" class="loading">Loading...</div>
-        <button class="refresh-button" onclick="fetchData()">Refresh Data</button>
-    </div>
-
-    <script>
-        // Function to fetch data from the API
-        async function fetchData() {
-            const dataElement = document.getElementById('data');
-            dataElement.innerHTML = '<div class="loading">Loading...</div>';
-
-            try {
-                const response = await fetch('v1/api?format=full-json');
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-
-                const data = await response.json();
-                displayData(data);
-            } catch (error) {
-                dataElement.innerHTML = `<div class="error">Error: ${error.message}</div>`;
-            }
-        }
-
-        // Function to display the fetched data
-        function displayData(data) {
-            const dataElement = document.getElementById('data');
-            dataElement.innerHTML = `
-                <div class="data-item"><strong>IP Address:</strong> ${data.ip}</div>
-                <div class="data-item"><strong>Country:</strong> ${data.country}</div>
-                <div class="data-item"><strong>Region:</strong> ${data.region}</div>
-                <div class="data-item"><strong>City:</strong> ${data.city}</div>
-                <div class="data-item"><strong>Latitude:</strong> ${data.latitude}</div>
-                <div class="data-item"><strong>Longitude:</strong> ${data.longitude}</div>
-                <div class="data-item"><strong>ISP:</strong> ${data.isp}</div>
-                <div class="data-item"><strong>Proxy/VPN Status:</strong> ${data.proxy_vpn_status}</div>
-            `;
-        }
-
-        // Fetch data when the page loads
-        fetchData();
-    </script>
-</body>
-
-</html>
+    default:
+        header('Content-Type: text/plain');
+        echo $user_ip;
+}
+?>
